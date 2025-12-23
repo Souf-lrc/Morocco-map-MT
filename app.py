@@ -29,8 +29,7 @@ def create_map():
         tiles=None
     )
 
-    # --- INJECTION DU CSS DIRECTEMENT DANS LA CARTE ---
-    # C'est ce bloc qui va réussir à modifier la taille des filtres
+    # --- INJECTION DU CSS DANS LA CARTE ---
     map_custom_css = """
     <style>
         /* Réduire la police du panneau de filtres */
@@ -65,7 +64,6 @@ def create_map():
     </style>
     """
     m.get_root().html.add_child(folium.Element(map_custom_css))
-    # --------------------------------------------------
 
     # Fonds de carte
     folium.TileLayer(
@@ -143,7 +141,9 @@ try:
     ).add_to(m)
 
     # Outils
-    Geocoder(position='topleft').add_to(m)
+    # CHANGEMENT ICI : position='topright'
+    Geocoder(position='topright').add_to(m)
+    
     MeasureControl(position='bottomleft', primary_length_unit='kilometers').add_to(m)
     
     # Filtres
