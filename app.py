@@ -125,7 +125,7 @@ st.title("⚡ Réseau Électrique Maroc")
 try:
     # z1, z2, z3, z4p1, z4p2, regions, communes, postes_df = load_data()
     m = create_map()
-    add_layers(m, regions, communes, postes_df)
+    # add_layers(m, regions, communes, postes_df)
     
     # Marqueur spécial
     folium.Marker(
