@@ -92,7 +92,7 @@ def load_postes():
     return df
 
 # 2. Logique principale
-st.markdown("<h4 style='margin: 0px; padding-bottom: 5px;'>⚡ Cartopgraphie des postes électriques </h4>", unsafe_allow_html=True)
+st.markdown("<h4 style='margin: 0px; padding-bottom: 5px;'>⚡ Réseau Électrique</h4>", unsafe_allow_html=True)
 
 try:
     postes_df = load_postes()
@@ -108,18 +108,19 @@ try:
 
         couleur = 'blue' if poste["Niveau de tension (kV)"] == 60 else 'red'
 
-        # Popup HTML
+        # Popup HTML ajusté avec saut de ligne <br>
         popup_html = f"""
-        <div style="font-family: Arial, sans-serif; font-size: 11px; width: 140px;">
+        <div style="font-family: Arial, sans-serif; font-size: 11px; width: 160px;">
             <b>{poste['Poste']}</b>
             <hr style="margin: 3px 0;">
-            {poste['Niveau de tension (kV)']} kV | Capacité 2027: {poste["Capacité d'accueil poste - 2027"]} MW
+            {poste['Niveau de tension (kV)']} kV<br>
+            Capacité 2027: {poste["Capacité d'accueil poste - 2027"]} MW
         </div>
         """
 
         folium.Marker(
             location=[poste['Latitude'], poste['Longitude']],
-            popup=folium.Popup(popup_html, max_width=200),
+            popup=folium.Popup(popup_html, max_width=220),
             tooltip=f"{poste['Poste']}",
             icon=folium.Icon(color=couleur, icon='bolt', prefix='fa')
         ).add_to(postes_layer)
@@ -141,7 +142,6 @@ try:
     ).add_to(m)
 
     # Outils
-    # CHANGEMENT ICI : position='topright'
     Geocoder(position='topright').add_to(m)
     
     MeasureControl(position='bottomleft', primary_length_unit='kilometers').add_to(m)
