@@ -4,57 +4,68 @@ import pandas as pd
 from streamlit_folium import st_folium
 from folium.plugins import MeasureControl, Geocoder
 
-# 1. Configuration de la page et CSS pour Mobile
+# 1. Configuration de la page
 st.set_page_config(layout="wide", page_title="Carte Postes Électriques")
 
-# Injection de CSS pour réduire la taille des polices et optimiser l'espace
+# CSS pour l'application Streamlit (Marges externes)
 st.markdown("""
     <style>
-        /* Réduire les marges de l'application Streamlit pour gagner de la place */
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 0.5rem !important;
             padding-bottom: 0rem !important;
             padding-left: 0rem !important;
             padding-right: 0rem !important;
-        }
-        
-        /* Réduire la police du contrôleur de couches (Filtres) */
-        .leaflet-control-layers {
-            font-size: 10px !important;
-            line-height: 12px !important;
-        }
-        .leaflet-control-layers label {
-            margin-bottom: 2px !important;
-        }
-        
-        /* Réduire la taille de la barre de recherche (Geocoder) */
-        .leaflet-control-geocoder-icon {
-            width: 26px !important;
-            height: 26px !important;
-        }
-        .leaflet-control-geocoder-form input {
-            font-size: 10px !important;
-            padding: 4px !important;
-        }
-        
-        /* Ajuster la taille des résultats de recherche */
-        .leaflet-control-geocoder-alternatives {
-            font-size: 10px !important;
-            width: 200px !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
 def create_map():
-    """Initialise la carte avec les différents fonds."""
+    """Initialise la carte."""
     m = folium.Map(
         location=[33.8, -5.5],
         zoom_start=7,
         zoom_snap=0.1,
         zoom_delta=0.1,
-        wheel_px_per_zoom_level=120,
         tiles=None
     )
+
+    # --- INJECTION DU CSS DIRECTEMENT DANS LA CARTE ---
+    # C'est ce bloc qui va réussir à modifier la taille des filtres
+    map_custom_css = """
+    <style>
+        /* Réduire la police du panneau de filtres */
+        .leaflet-control-layers {
+            font-size: 10px !important;
+            line-height: 12px !important;
+            padding: 5px !important;
+        }
+        /* Réduire l'espacement entre les options */
+        .leaflet-control-layers label {
+            margin-bottom: 0px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        /* Réduire la taille des checkbox */
+        .leaflet-control-layers input[type="radio"], 
+        .leaflet-control-layers input[type="checkbox"] {
+            margin: 2px 5px 2px 0 !important;
+            height: 12px !important;
+            width: 12px !important;
+        }
+        /* Réduire la barre de recherche */
+        .leaflet-control-geocoder-icon {
+            width: 24px !important;
+            height: 24px !important;
+        }
+        .leaflet-control-geocoder-form input {
+            font-size: 11px !important;
+            padding: 3px !important;
+            height: 24px !important;
+        }
+    </style>
+    """
+    m.get_root().html.add_child(folium.Element(map_custom_css))
+    # --------------------------------------------------
 
     # Fonds de carte
     folium.TileLayer(
@@ -76,22 +87,21 @@ def create_map():
 
 @st.cache_data
 def load_postes():
-    """Charge les données des postes."""
+    """Charge les données."""
     data_path = 'data/'
     zoning_path = data_path + 'Zoning solaire.xlsx'
     df = pd.read_excel(zoning_path, sheet_name='Capacité_accueil_full', decimal=',', engine='openpyxl')
     return df
 
 # 2. Logique principale
-# Titre plus petit pour gagner de la place sur mobile
-st.markdown("### ⚡ Réseau Électrique")
+st.markdown("<h4 style='margin: 0px; padding-bottom: 5px;'>⚡ Réseau Électrique</h4>", unsafe_allow_html=True)
 
 try:
     postes_df = load_postes()
     m = create_map()
 
-    # Groupes de couches
-    postes_layer = folium.FeatureGroup(name='Postes électriques', show=True).add_to(m)
+    # Couches
+    postes_layer = folium.FeatureGroup(name='Postes', show=True).add_to(m)
     cercles_layer = folium.FeatureGroup(name='Rayons 5km', show=False).add_to(m)
 
     for _, poste in postes_df.iterrows():
@@ -100,13 +110,12 @@ try:
 
         couleur = 'blue' if poste["Niveau de tension (kV)"] == 60 else 'red'
 
-        # Popup HTML compact
+        # Popup HTML
         popup_html = f"""
-        <div style="font-family: Arial, sans-serif; font-size: 11px; width: 150px;">
+        <div style="font-family: Arial, sans-serif; font-size: 11px; width: 140px;">
             <b>{poste['Poste']}</b>
             <hr style="margin: 3px 0;">
-            Tens.: {poste['Niveau de tension (kV)']} kV<br>
-            Cap.: {poste["Capacité d'accueil poste - 2027"]} MW
+            {poste['Niveau de tension (kV)']} kV | {poste["Capacité d'accueil poste - 2027"]} MW
         </div>
         """
 
@@ -117,17 +126,16 @@ try:
             icon=folium.Icon(color=couleur, icon='bolt', prefix='fa')
         ).add_to(postes_layer)
 
-        # Cercle de 5km (5000 mètres)
+        # Cercle 5km
         folium.Circle(
             location=[poste['Latitude'], poste['Longitude']],
             radius=5000, 
             color=couleur,
-            fill=True,
-            fill_opacity=0.05,
+            fill=True, fill_opacity=0.05,
             popup=f"Zone 5km - {poste['Poste']}"
         ).add_to(cercles_layer)
 
-    # Marqueur Ferme Benjdya
+    # Point spécifique
     folium.Marker(
         location=[35.10317622036963, -6.109536361502073],
         popup="Ferme Benjdya",
@@ -135,14 +143,13 @@ try:
     ).add_to(m)
 
     # Outils
-    Geocoder(position='topleft').add_to(m) # Déplacé à gauche pour équilibrer
+    Geocoder(position='topleft').add_to(m)
     MeasureControl(position='bottomleft', primary_length_unit='kilometers').add_to(m)
     
-    # Filtres en bas à droite
+    # Filtres
     folium.LayerControl(collapsed=False, position='bottomright').add_to(m)
 
-    # Affichage optimisé : Hauteur réduite à 75vh (75% de la hauteur de l'écran) ou 600px max
-    # Cela permet de voir les boutons du bas sans scroller
+    # Affichage optimisé mobile
     st_folium(m, width="100%", height=600, returned_objects=[])
 
 except Exception as e:
