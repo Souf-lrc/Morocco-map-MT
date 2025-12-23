@@ -8,21 +8,39 @@ from folium.plugins import MeasureControl, Geocoder
 st.set_page_config(layout="wide", page_title="Carte Postes Électriques")
 
 def create_map():
-    """Initialise la carte avec zoom fluide et fond Google Hybrid."""
+    """Initialise la carte avec les différents fonds de carte demandés."""
     m = folium.Map(
         location=[33.8, -5.5],
         zoom_start=7,
         zoom_snap=0.1,
         zoom_delta=0.1,
         wheel_px_per_zoom_level=120,
-        tiles=None
+        tiles=None # On désactive le fond par défaut pour utiliser les nôtres
     )
 
-    # Ajout du fond Google Hybrid uniquement pour la performance
+    # Fond Google Hybrid
     folium.TileLayer(
         tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
         attr='© Google Hybrid',
         name='Google Hybrid',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    # Fond Google Satellite
+    folium.TileLayer(
+        tiles='https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        attr='© Google Satellite',
+        name='Google Satellite',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    # Fond ESRI Topo
+    folium.TileLayer(
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+        attr='ESRI World Topo Map',
+        name='ESRI Topo',
         overlay=False,
         control=True
     ).add_to(m)
@@ -31,67 +49,74 @@ def create_map():
 
 @st.cache_data
 def load_postes():
-    """Charge uniquement les données des postes électriques."""
+    """Charge les données des postes électriques."""
     data_path = 'data/'
     zoning_path = data_path + 'Zoning solaire.xlsx'
-    
-    # Lecture de la feuille spécifique aux postes 
-    df = pd.read_excel(
-        zoning_path, 
-        sheet_name='Capacité_accueil_full', 
-        decimal=',', 
-        engine='openpyxl'
-    )
+    df = pd.read_excel(zoning_path, sheet_name='Capacité_accueil_full', decimal=',', engine='openpyxl')
     return df
 
 # 2. Logique principale
-st.title("⚡ Localisation des Postes Électriques")
+st.title("⚡ Réseau Électrique - Consultation Mobile")
 
 try:
     postes_df = load_postes()
     m = create_map()
 
-    # Ajout des postes électriques
+    # Création des groupes de couches (Layer Groups)
+    postes_layer = folium.FeatureGroup(name='Postes électriques', show=True).add_to(m)
+    cercles_layer = folium.FeatureGroup(name='Rayons 20km', show=False).add_to(m)
+
     for _, poste in postes_df.iterrows():
-        # Filtre de capacité [cite: 15]
         if poste["Capacité d'accueil poste - 2027"] < 2:
             continue
 
-        # Logique de couleur : Bleu pour 60kV, Rouge pour les autres [cite: 15, 16]
+        # Logique de couleur : Bleu pour 60kV, Rouge pour le reste
         couleur = 'blue' if poste["Niveau de tension (kV)"] == 60 else 'red'
 
-        # Marqueur avec icône bolt [cite: 17]
+        # Préparation du contenu du Popup en HTML
+        popup_html = f"""
+        <div style="font-family: Arial, sans-serif; font-size: 13px; width: 200px;">
+            <h4 style="margin-bottom: 5px;">{poste['Poste']}</h4>
+            <hr style="margin: 5px 0;">
+            <b>Tension :</b> {poste['Niveau de tension (kV)']} kV<br>
+            <b>Capacité 2027 :</b> {poste["Capacité d'accueil poste - 2027"]} MW
+        </div>
+        """
+
+        # Ajouter le marqueur avec le style demandé
         folium.Marker(
             location=[poste['Latitude'], poste['Longitude']],
-            popup=f"<b>{poste['Poste']}</b><br>Tension: {poste['Niveau de tension (kV)']} kV",
-            tooltip=poste['Poste'],
+            popup=folium.Popup(popup_html, max_width=300),
+            tooltip=f"{poste['Poste']} ({poste['Niveau de tension (kV)']} kV)",
             icon=folium.Icon(color=couleur, icon='bolt', prefix='fa')
-        ).add_to(m)
+        ).add_to(postes_layer)
 
-        # Label permanent simplifié [cite: 18, 19]
-        folium.Marker(
+        # Ajouter le cercle de 20km (masqué par défaut via le groupe)
+        folium.Circle(
             location=[poste['Latitude'], poste['Longitude']],
-            icon=folium.DivIcon(
-                html=f'<div style="background: white; border: 1px solid black; padding: 2px; font-size: 9px; border-radius:3px;">{poste["Poste"]}</div>',
-                icon_anchor=(70, -10)
-            )
-        ).add_to(m)
+            radius=20000,
+            color=couleur,
+            fill=True,
+            fill_opacity=0.05,
+            popup=f"Rayon 20km - {poste['Poste']}"
+        ).add_to(cercles_layer)
 
-    # Ajout du marqueur spécial [cite: 24]
+    # Marqueur spécial (Ferme Benjdya)
     folium.Marker(
         location=[35.10317622036963, -6.109536361502073],
         popup="Ferme Benjdya",
         icon=folium.Icon(color='orange', icon='star', prefix='fa')
     ).add_to(m)
 
-    # Outils utilitaires [cite: 23, 24]
+    # Contrôles de la carte
     Geocoder(position='topright').add_to(m)
     MeasureControl(position='bottomleft', primary_length_unit='kilometers').add_to(m)
+    
+    # Ajout du sélecteur de couches (filtres)
+    folium.LayerControl(collapsed=False, position='bottomright').add_to(m)
 
-    # Affichage de la carte
-    # returned_objects=[] permet d'éviter les rechargements inutiles lors du clic
+    # Affichage final
     st_folium(m, width="100%", height=700, returned_objects=[])
 
 except Exception as e:
-    st.error(f"Erreur de chargement : {e}")
-    st.info("Assurez-vous que 'data/Zoning solaire.xlsx' est présent sur GitHub.")
+    st.error(f"Une erreur est survenue : {e}")
