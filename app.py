@@ -92,7 +92,7 @@ def load_postes():
     return df
 
 # 2. Logique principale
-st.markdown("<h4 style='margin: 0px; padding-bottom: 5px;'>⚡ Réseau Électrique</h4>", unsafe_allow_html=True)
+st.markdown("<h4 style='margin: 0px; padding-bottom: 5px;'>⚡ Cartopgraphie des postes électriques </h4>", unsafe_allow_html=True)
 
 try:
     postes_df = load_postes()
@@ -113,7 +113,7 @@ try:
         <div style="font-family: Arial, sans-serif; font-size: 11px; width: 140px;">
             <b>{poste['Poste']}</b>
             <hr style="margin: 3px 0;">
-            {poste['Niveau de tension (kV)']} kV | {poste["Capacité d'accueil poste - 2027"]} MW
+            {poste['Niveau de tension (kV)']} kV | "Capacité 2027 : "{poste["Capacité d'accueil poste - 2027"]} MW
         </div>
         """
 
