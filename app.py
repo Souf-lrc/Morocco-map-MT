@@ -113,7 +113,7 @@ try:
         <div style="font-family: Arial, sans-serif; font-size: 11px; width: 140px;">
             <b>{poste['Poste']}</b>
             <hr style="margin: 3px 0;">
-            {poste['Niveau de tension (kV)']} kV | "Capacité 2027 : "{poste["Capacité d'accueil poste - 2027"]} MW
+            {poste['Niveau de tension (kV)']} kV | Capacité 2027: {poste["Capacité d'accueil poste - 2027"]} MW
         </div>
         """
 
