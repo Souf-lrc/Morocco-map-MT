@@ -108,9 +108,9 @@ try:
 
         couleur = 'blue' if poste["Niveau de tension (kV)"] == 60 else 'red'
 
-        # Popup HTML ajusté avec saut de ligne <br>
+        # Popup HTML : Retour à width: 140px
         popup_html = f"""
-        <div style="font-family: Arial, sans-serif; font-size: 11px; width: 160px;">
+        <div style="font-family: Arial, sans-serif; font-size: 11px; width: 140px;">
             <b>{poste['Poste']}</b>
             <hr style="margin: 3px 0;">
             {poste['Niveau de tension (kV)']} kV<br>
@@ -120,7 +120,8 @@ try:
 
         folium.Marker(
             location=[poste['Latitude'], poste['Longitude']],
-            popup=folium.Popup(popup_html, max_width=220),
+            # Retour à max_width=200 pour garder le style compact
+            popup=folium.Popup(popup_html, max_width=200),
             tooltip=f"{poste['Poste']}",
             icon=folium.Icon(color=couleur, icon='bolt', prefix='fa')
         ).add_to(postes_layer)
