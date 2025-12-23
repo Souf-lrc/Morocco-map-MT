@@ -35,7 +35,6 @@ def load_data():
     return zone1, zone2, zone3, zone4_part1, zone4_part2, regions, communes, postes_df
 # ... (Gardez vos fonctions create_map et add_layers telles quelles) ...
 
-
 # Création de la carte
 m = create_map()
 zone1, zone2, zone3, zone4_part1, zone4_part2, regions, communes, postes_df = load_data()
