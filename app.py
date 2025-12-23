@@ -47,9 +47,13 @@ def load_data():
     zone4_part2 = pd.read_excel(zoning_path, sheet_name='Zone4-part2', decimal=',', engine='openpyxl')
     postes_df = pd.read_excel(zoning_path, sheet_name='Capacité_accueil_full', decimal=',', engine='openpyxl')
 
-    # Chargement des géométries [cite: 6]
+    # Chargement et simplification des régions
     regions = gpd.read_file(data_path + 'regions/regions.shp')
+    regions = regions.simplify(0.01, preserve_topology=True) # Allège le tracé [cite: 10]
+    
+    # Chargement et simplification des communes
     communes = gpd.read_file(data_path + '678ec1b952b09_Commune_Maroc/populaion_commune.shp').to_crs(epsg=4326)
+    communes.geometry = communes.geometry.simplify(0.001, preserve_topology=True) # Allège les communes 
 
     return zone1, zone2, zone3, zone4_part1, zone4_part2, regions, communes, postes_df
 
