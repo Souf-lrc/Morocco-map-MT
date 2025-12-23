@@ -85,39 +85,39 @@ def add_layers(m, regions, communes, postes_df):
     postes_layer = folium.FeatureGroup(name='Postes électriques').add_to(m)
     cercles_layer = folium.FeatureGroup(name='Rayons 15km', show=False).add_to(m)
 
-    for _, poste in postes_df.iterrows():
-        if poste["Capacité d'accueil poste - 2027"] < 2:
-            continue
+    # for _, poste in postes_df.iterrows():
+    #     if poste["Capacité d'accueil poste - 2027"] < 2:
+    #         continue
 
-        # Logique de couleur selon tension 
-        couleur = 'blue' if poste["Niveau de tension (kV)"] == 60 else 'red'
+    #     # Logique de couleur selon tension 
+    #     couleur = 'blue' if poste["Niveau de tension (kV)"] == 60 else 'red'
 
-        # Marqueur principal [cite: 17]
-        folium.Marker(
-            location=[poste['Latitude'], poste['Longitude']],
-            popup=f"<b>{poste['Poste']}</b><br>Tension: {poste['Niveau de tension (kV)']} kV",
-            icon=folium.Icon(color=couleur, icon='bolt', prefix='fa')
-        ).add_to(postes_layer)
+    #     # Marqueur principal [cite: 17]
+    #     folium.Marker(
+    #         location=[poste['Latitude'], poste['Longitude']],
+    #         popup=f"<b>{poste['Poste']}</b><br>Tension: {poste['Niveau de tension (kV)']} kV",
+    #         icon=folium.Icon(color=couleur, icon='bolt', prefix='fa')
+    #     ).add_to(postes_layer)
 
-        # Label permanent [cite: 18, 19, 20, 21]
-        folium.Marker(
-            location=[poste['Latitude'], poste['Longitude']],
-            icon=folium.DivIcon(
-                html=f'<div style="background: white; border: 1px solid black; padding: 2px; font-size: 9px;">{poste["Poste"]}</div>',
-                icon_anchor=(0, 0)
-            )
-        ).add_to(postes_layer)
+    #     # Label permanent [cite: 18, 19, 20, 21]
+    #     folium.Marker(
+    #         location=[poste['Latitude'], poste['Longitude']],
+    #         icon=folium.DivIcon(
+    #             html=f'<div style="background: white; border: 1px solid black; padding: 2px; font-size: 9px;">{poste["Poste"]}</div>',
+    #             icon_anchor=(0, 0)
+    #         )
+    #     ).add_to(postes_layer)
 
-        # Cercle de rayon 15km [cite: 22]
-        folium.Circle(
-            location=[poste['Latitude'], poste['Longitude']],
-            radius=15000, color=couleur, fill=True, fill_opacity=0.05
-        ).add_to(cercles_layer)
+    #     # Cercle de rayon 15km [cite: 22]
+    #     folium.Circle(
+    #         location=[poste['Latitude'], poste['Longitude']],
+    #         radius=15000, color=couleur, fill=True, fill_opacity=0.05
+    #     ).add_to(cercles_layer)
 
-    # Outils [cite: 23, 24]
-    Geocoder(position='topright').add_to(m)
-    MeasureControl(primary_length_unit='kilometers', primary_area_unit='hectares').add_to(m)
-    folium.LayerControl(collapsed=False).add_to(m)
+    # # Outils [cite: 23, 24]
+    # Geocoder(position='topright').add_to(m)
+    # MeasureControl(primary_length_unit='kilometers', primary_area_unit='hectares').add_to(m)
+    # folium.LayerControl(collapsed=False).add_to(m)
 
 # 3. Lancement de l'application
 st.title("⚡ Réseau Électrique Maroc")
